@@ -1,0 +1,8 @@
+generatorName: go-gin-server
+outputDir: /local
+inputSpec: /local/api/project-evidence.openapi.yaml
+enablePostProcessFile: true
+additionalProperties:
+  apiPath: internal/project_evidence
+  packageName: project_evidence
+  interfaceOnly: true

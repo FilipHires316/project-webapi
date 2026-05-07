@@ -1,0 +1,6 @@
+internal/project_evidence/README.md
+internal/project_evidence/api_patient_evidence.go
+internal/project_evidence/api_patient_prescriptions.go
+internal/project_evidence/model_evided_patient.go
+internal/project_evidence/model_prescription.go
+internal/project_evidence/routers.go
