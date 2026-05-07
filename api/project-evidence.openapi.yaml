@@ -1,0 +1,528 @@
+openapi: 3.0.0
+servers:
+  - description: Cluster Endpoint
+    url: /api
+info:
+  description: Patient Evidence and Prescription management for Web-In-Cloud system
+  version: "1.0.0"
+  title: Patient Evidence Api
+  contact:
+    email: your_email@stuba.sk
+  license:
+    name: CC BY 4.0
+    url: "https://creativecommons.org/licenses/by/4.0/"
+
+tags:
+  - name: patientEvidence
+    description: Patient Evidence API
+  - name: patientPrescriptions
+    description: Patient Prescriptions API
+
+paths:
+  "/evidence/{ambulanceId}/patients":
+    get:
+      tags: [patientEvidence]
+      summary: Provides the list of evidenced patients
+      operationId: getEvidedPatients
+      description: Returns all patients registered at the given ambulance
+      parameters:
+        - in: path
+          name: ambulanceId
+          description: id of the particular ambulance
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: list of evidenced patients
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EvidedPatient"
+              examples:
+                response:
+                  $ref: "#/components/examples/EvidedPatientsExample"
+        "404":
+          description: Ambulance with such ID does not exist
+    post:
+      tags: [patientEvidence]
+      summary: Register a new patient
+      operationId: createEvidedPatient
+      description: Creates a new patient record at the given ambulance
+      parameters:
+        - in: path
+          name: ambulanceId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EvidedPatient"
+            examples:
+              request:
+                $ref: "#/components/examples/EvidedPatientExample"
+      responses:
+        "200":
+          description: the created patient record
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EvidedPatient"
+        "400":
+          description: Invalid patient data
+        "404":
+          description: Ambulance with such ID does not exist
+        "409":
+          description: Patient with the same rodné číslo already exists
+
+  "/evidence/{ambulanceId}/patients/{patientId}":
+    get:
+      tags: [patientEvidence]
+      summary: Provides a single patient record
+      operationId: getEvidedPatient
+      parameters:
+        - in: path
+          name: ambulanceId
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: patientId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: patient record
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EvidedPatient"
+        "404":
+          description: Patient or ambulance not found
+    put:
+      tags: [patientEvidence]
+      summary: Update patient record
+      operationId: updateEvidedPatient
+      parameters:
+        - in: path
+          name: ambulanceId
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: patientId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EvidedPatient"
+      responses:
+        "200":
+          description: updated patient record
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EvidedPatient"
+        "400":
+          description: Invalid patient data
+        "404":
+          description: Patient or ambulance not found
+    delete:
+      tags: [patientEvidence]
+      summary: Delete patient record
+      operationId: deleteEvidedPatient
+      parameters:
+        - in: path
+          name: ambulanceId
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: patientId
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Patient deleted
+        "404":
+          description: Patient or ambulance not found
+
+  "/evidence/{ambulanceId}/patients/{patientId}/prescriptions":
+    get:
+      tags: [patientPrescriptions]
+      summary: Provides the list of prescriptions for a patient
+      operationId: getPatientPrescriptions
+      parameters:
+        - in: path
+          name: ambulanceId
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: patientId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: list of prescriptions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Prescription"
+              examples:
+                response:
+                  $ref: "#/components/examples/PrescriptionsExample"
+        "404":
+          description: Patient or ambulance not found
+    post:
+      tags: [patientPrescriptions]
+      summary: Create a new prescription
+      operationId: createPrescription
+      parameters:
+        - in: path
+          name: ambulanceId
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: patientId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Prescription"
+      responses:
+        "200":
+          description: the created prescription
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Prescription"
+        "400":
+          description: Invalid prescription data
+        "404":
+          description: Patient or ambulance not found
+
+  "/evidence/{ambulanceId}/patients/{patientId}/prescriptions/{prescriptionId}":
+    get:
+      tags: [patientPrescriptions]
+      summary: Provides a single prescription
+      operationId: getPrescription
+      parameters:
+        - in: path
+          name: ambulanceId
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: patientId
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: prescriptionId
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: prescription record
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Prescription"
+        "404":
+          description: Prescription, patient, or ambulance not found
+    put:
+      tags: [patientPrescriptions]
+      summary: Update prescription
+      operationId: updatePrescription
+      parameters:
+        - in: path
+          name: ambulanceId
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: patientId
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: prescriptionId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Prescription"
+      responses:
+        "200":
+          description: updated prescription
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Prescription"
+        "400":
+          description: Invalid prescription data
+        "404":
+          description: Prescription, patient, or ambulance not found
+    delete:
+      tags: [patientPrescriptions]
+      summary: Delete prescription
+      operationId: deletePrescription
+      parameters:
+        - in: path
+          name: ambulanceId
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: patientId
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: prescriptionId
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Prescription deleted
+        "404":
+          description: Prescription, patient, or ambulance not found
+
+components:
+  schemas:
+    EvidedPatient:
+      type: object
+      required: [id, name, rodneCislo, dateOfBirth, gender, insurance]
+      properties:
+        id:
+          type: string
+          example: pat-001
+          description: Unique id of the patient record
+        name:
+          type: string
+          example: Jožko Púčik
+          description: Full name of the patient
+        rodneCislo:
+          type: string
+          example: "950215/1234"
+          description: Slovak national identification number
+        dateOfBirth:
+          type: string
+          format: date
+          example: "1995-02-15"
+        gender:
+          type: string
+          enum: [male, female, other]
+          example: male
+        address:
+          type: string
+          example: Hlavná 12, 811 01 Bratislava
+        phone:
+          type: string
+          example: "+421 900 123 456"
+        email:
+          type: string
+          format: email
+          example: jozko.pucik@example.sk
+        insurance:
+          type: string
+          enum: [VšZP, Dôvera, Union]
+          example: VšZP
+          description: Health insurance company
+        bloodType:
+          type: string
+          enum: ["A+", "A-", "B+", "B-", "AB+", "AB-", "0+", "0-"]
+          x-enum-varnames:
+            - A_POSITIVE
+            - A_NEGATIVE
+            - B_POSITIVE
+            - B_NEGATIVE
+            - AB_POSITIVE
+            - AB_NEGATIVE
+            - O_POSITIVE
+            - O_NEGATIVE
+          example: "A+"
+        allergies:
+          type: string
+          description: Free-text list of known allergies
+          example: Penicilín, orechy
+        chronicConditions:
+          type: string
+          description: Free-text list of chronic conditions
+          example: Hypertenzia
+        medications:
+          type: string
+          description: Free-text list of long-term medications
+          example: Prestarium 5 mg, Concor 2.5 mg
+
+    Prescription:
+      type: object
+      required: [id, medicineName, strength, form, dosage, quantity, prescribedDate, validUntil, prescribedBy, status]
+      properties:
+        id:
+          type: string
+          example: rx-001
+        medicineName:
+          type: string
+          example: Ibalgin
+        strength:
+          type: string
+          example: 400 mg
+        form:
+          type: string
+          enum: [tbl., kapsule, sirup, kvapky, masť, krém, injekcia, inhalátor, čapík]
+          example: tbl.
+        dosage:
+          type: string
+          description: Dosing schedule (morning-noon-evening-night)
+          example: 1-0-1-0
+        instructions:
+          type: string
+          description: Free-text patient instructions
+          example: Užívať po jedle, zapiť pohárom vody
+        quantity:
+          type: string
+          example: 30 tbl.
+        atcCode:
+          type: string
+          description: Anatomical Therapeutic Chemical classification code
+          example: M01AE01
+        prescribedDate:
+          type: string
+          format: date
+          example: "2025-10-12"
+        validUntil:
+          type: string
+          format: date
+          example: "2026-04-12"
+        prescribedBy:
+          type: string
+          example: MUDr. Anna Nováková
+        status:
+          type: string
+          enum: [active, dispensed, expired]
+          example: active
+        repeatMonths:
+          type: integer
+          enum: [1, 3, 6, 12]
+          example: 1
+          description: Repeat prescription period in months (1 = single use)
+        coverage:
+          type: string
+          enum: [full, partial, none]
+          example: full
+          description: Insurance coverage level
+
+  examples:
+    EvidedPatientExample:
+      summary: A registered patient
+      value:
+        id: pat-001
+        name: Jožko Púčik
+        rodneCislo: "950215/1234"
+        dateOfBirth: "1995-02-15"
+        gender: male
+        address: Hlavná 12, 811 01 Bratislava
+        phone: "+421 900 123 456"
+        email: jozko.pucik@example.sk
+        insurance: VšZP
+        bloodType: "A+"
+        allergies: ""
+        chronicConditions: ""
+        medications: ""
+
+    EvidedPatientsExample:
+      summary: List of evidenced patients
+      value:
+        - id: pat-001
+          name: Jožko Púčik
+          rodneCislo: "950215/1234"
+          dateOfBirth: "1995-02-15"
+          gender: male
+          insurance: VšZP
+          bloodType: "A+"
+          allergies: ""
+        - id: pat-002
+          name: Bc. August Cézar
+          rodneCislo: "780923/5678"
+          dateOfBirth: "1978-09-23"
+          gender: male
+          insurance: Dôvera
+          bloodType: "0-"
+          allergies: Penicilín
+        - id: pat-003
+          name: Ing. Ferdinand Trety
+          rodneCislo: "650304/9012"
+          dateOfBirth: "1965-03-04"
+          gender: male
+          insurance: Union
+          bloodType: "AB+"
+          allergies: ""
+
+    PrescriptionExample:
+      summary: An active prescription
+      value:
+        id: rx-001
+        medicineName: Ibalgin
+        strength: 400 mg
+        form: tbl.
+        dosage: 1-0-1-0
+        instructions: Užívať po jedle
+        quantity: 30 tbl.
+        atcCode: M01AE01
+        prescribedDate: "2025-10-12"
+        validUntil: "2026-04-12"
+        prescribedBy: MUDr. Anna Nováková
+        status: active
+        repeatMonths: 1
+        coverage: full
+
+    PrescriptionsExample:
+      summary: List of patient prescriptions
+      value:
+        - id: rx-001
+          medicineName: Ibalgin
+          strength: 400 mg
+          form: tbl.
+          dosage: 1-0-1-0
+          quantity: 30 tbl.
+          prescribedDate: "2025-10-12"
+          validUntil: "2026-04-12"
+          prescribedBy: MUDr. Anna Nováková
+          status: active
+        - id: rx-002
+          medicineName: Amoxicilín Sandoz
+          strength: 500 mg
+          form: kapsule
+          dosage: 1-1-1-0
+          quantity: 21 kapsúl
+          prescribedDate: "2025-09-28"
+          validUntil: "2025-10-28"
+          prescribedBy: MUDr. Anna Nováková
+          status: dispensed
