@@ -1,0 +1,5 @@
+internal/project_evidence/api_*
+internal/project_evidence/model_*
+internal/project_evidence/routers.go
+build/
+deployments/

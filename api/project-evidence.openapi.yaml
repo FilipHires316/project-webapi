@@ -434,6 +434,11 @@ components:
           type: string
           description: Free-text list of long-term medications
           example: Prestarium 5 mg, Concor 2.5 mg
+        prescriptions:                              # ← PRIDAJ TOTO
+          type: array
+          items:
+            $ref: '#/components/schemas/Prescription'
+          description: List of prescriptions for this patient
 
     Prescription:
       type: object

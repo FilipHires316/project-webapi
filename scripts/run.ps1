@@ -29,6 +29,9 @@ switch ($command) {
     "mongo" {
         mongo up
     }
+    "docker" {
+        docker build -t dastan16/project-evidence-webapi:local-build -f ${ProjectRoot}/build/docker/Dockerfile .
+    }
     "openapi" {
         docker run --rm -ti -v ${ProjectRoot}:/local openapitools/openapi-generator-cli generate -c /local/scripts/generator-cfg.yaml
     }

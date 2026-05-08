@@ -44,4 +44,7 @@ type EvidedPatient struct {
 
 	// Free-text list of long-term medications
 	Medications string `json:"medications,omitempty"`
+
+	// List of prescriptions for this patient
+	Prescriptions []Prescription `json:"prescriptions,omitempty"`
 }
