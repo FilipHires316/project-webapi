@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gregor-hires-project-webapi
+spec:
+  template:
+    spec:
+      initContainers:
+        - name: init-mongodb
+          env:
+            - name: PROJECT_API_MONGODB_HOST
+              value: null
+              valueFrom:
+                configMapKeyRef:
+                  name: mongodb-connection
+                  key: host
+            - name: PROJECT_API_MONGODB_PORT
+              value: null
+              valueFrom:
+                configMapKeyRef:
+                  name: mongodb-connection
+                  key: port
+            - name: PROJECT_API_MONGODB_USERNAME
+              value: null
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb-auth
+                  key: username
+            - name: PROJECT_API_MONGODB_PASSWORD
+              value: null
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb-auth
+                  key: password
+      containers:
+        - name: gregor-hires-project-evidence-webapi-container
+          env:
+            - name: PROJECT_API_MONGODB_HOST
+              value: null
+              valueFrom:
+                configMapKeyRef:
+                  name: mongodb-connection
+                  key: host
+            - name: PROJECT_API_MONGODB_PORT
+              value: null
+              valueFrom:
+                configMapKeyRef:
+                  name: mongodb-connection
+                  key: port
+            - name: PROJECT_API_MONGODB_USERNAME
+              value: null
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb-auth
+                  key: username
+            - name: PROJECT_API_MONGODB_PASSWORD
+              value: null
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb-auth
+                  key: password

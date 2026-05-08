@@ -1,0 +1,22 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- deployment.yaml
+- service.yaml
+
+configMapGenerator:
+  - name: gregor-hires-project-webapi-mongodb-init
+    files:
+      - params/init-db.js
+  - name: gregor-hires-project-webapi-config
+    literals:
+      - database=gregor-hires-project
+      - collection=project
+patches:
+- path: patches/webapi.deployment.yaml
+  target:
+    group: apps
+    version: v1
+    kind: Deployment
+    name: gregor-hires-project-webapi
