@@ -17,8 +17,62 @@ tags:
     description: Patient Evidence API
   - name: patientPrescriptions
     description: Patient Prescriptions API
+  - name: ambulances
+    description: Ambulance details
 
 paths:
+  "/ambulance":
+    post:
+      tags:
+        - ambulances
+      summary: Saves new ambulance definition
+      operationId: createAmbulance
+      description: Use this method to initialize new ambulance in the system
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Ambulance"
+            examples:
+              request-sample:
+                $ref: "#/components/examples/AmbulanceExample"
+        description: Ambulance details to store
+        required: true
+      responses:
+        "200":
+          description: Value of stored ambulance
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ambulance"
+              examples:
+                updated-response:
+                  $ref: "#/components/examples/AmbulanceExample"
+        "400":
+          description: Missing mandatory properties of input object.
+        "409":
+          description: Entry with the specified id already exists
+
+  "/ambulance/{ambulanceId}":
+    delete:
+      tags:
+        - ambulances
+      summary: Deletes specific ambulance
+      operationId: deleteAmbulance
+      description: Use this method to delete the specific ambulance from the system.
+      parameters:
+        - in: path
+          name: ambulanceId
+          description: pass the id of the particular ambulance
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Item deleted
+        "404":
+          description: Ambulance with such ID does not exist
+  
   "/evidence/{ambulanceId}/patients":
     get:
       tags: [patientEvidence]
@@ -439,6 +493,29 @@ components:
           example: full
           description: Insurance coverage level
 
+    Ambulance:
+      type: object
+      required: ["id", "name", "roomNumber"]
+      properties:
+        id:
+          type: string
+          example: gp-bobulova
+          description: Unique identifier of the ambulance
+        name:
+          type: string
+          example: Ambulancia všeobecného lekárstva Dr. Bobuľová
+          description: Human readable display name of the ambulance
+        roomNumber:
+          type: string
+          example: 142 - 1.posch
+        patients:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvidedPatient'
+          description: List of patients registered in this ambulance
+      example:
+        $ref: "#/components/examples/AmbulanceExample"
+
   examples:
     EvidedPatientExample:
       summary: A registered patient
@@ -526,3 +603,34 @@ components:
           validUntil: "2025-10-28"
           prescribedBy: MUDr. Anna Nováková
           status: dispensed
+
+    AmbulanceExample:
+      summary: Sample GP ambulance
+      description: |
+        Example of GP ambulance with registered patients and their prescriptions
+      value:
+        id: gp-bobulova
+        name: Ambulancia všeobecného lekárstva Dr. Bobuľová
+        roomNumber: 142 - 1.posch
+        patients:
+          - id: pat-001
+            name: Jožko Púčik
+            rodneCislo: "950215/1234"
+            dateOfBirth: "1995-02-15"
+            gender: male
+            address: Hlavná 12, 811 01 Bratislava
+            phone: "+421 900 123 456"
+            email: jozko.pucik@example.sk
+            insurance: VšZP
+            bloodType: "A+"
+            allergies: ""
+            chronicConditions: ""
+            medications: ""
+          - id: pat-002
+            name: Bc. August Cézar
+            rodneCislo: "780923/5678"
+            dateOfBirth: "1978-09-23"
+            gender: male
+            insurance: Dôvera
+            bloodType: "0-"
+            allergies: Penicilín

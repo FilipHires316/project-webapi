@@ -63,6 +63,8 @@ func DefaultHandleFunc(c *gin.Context) {
 
 type ApiHandleFunctions struct {
 
+	// Routes for the AmbulancesAPI part of the API
+	AmbulancesAPI AmbulancesAPI
 	// Routes for the PatientEvidenceAPI part of the API
 	PatientEvidenceAPI PatientEvidenceAPI
 	// Routes for the PatientPrescriptionsAPI part of the API
@@ -71,6 +73,18 @@ type ApiHandleFunctions struct {
 
 func getRoutes(handleFunctions ApiHandleFunctions) []Route {
 	return []Route{ 
+		{
+			"CreateAmbulance",
+			http.MethodPost,
+			"/api/ambulance",
+			handleFunctions.AmbulancesAPI.CreateAmbulance,
+		},
+		{
+			"DeleteAmbulance",
+			http.MethodDelete,
+			"/api/ambulance/:ambulanceId",
+			handleFunctions.AmbulancesAPI.DeleteAmbulance,
+		},
 		{
 			"CreateEvidedPatient",
 			http.MethodPost,
