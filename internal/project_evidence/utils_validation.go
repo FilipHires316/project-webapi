@@ -1,4 +1,4 @@
-spackage project_evidence
+package project_evidence
 
 import (
 	"strings"
