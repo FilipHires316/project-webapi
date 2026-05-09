@@ -22,6 +22,68 @@ func findPatientIndex(ambulance *Ambulance, patientId string) int {
 	})
 }
 
+// validatePrescription kontroluje povinné polia a enum hodnoty predpisu.
+// Vracia gin.H s chybou a status kódom, alebo nil ak je všetko v poriadku.
+func validatePrescription(prescription Prescription) (gin.H, int) {
+	missing := validateRequired(map[string]string{
+		"id":             prescription.Id,
+		"medicineName":   prescription.MedicineName,
+		"strength":       prescription.Strength,
+		"form":           prescription.Form,
+		"dosage":         prescription.Dosage,
+		"quantity":       prescription.Quantity,
+		"prescribedDate": prescription.PrescribedDate,
+		"validUntil":     prescription.ValidUntil,
+		"prescribedBy":   prescription.PrescribedBy,
+		"status":         prescription.Status,
+	})
+	if len(missing) > 0 {
+		return gin.H{
+			"status":  http.StatusBadRequest,
+			"message": "Missing required fields",
+			"missing": missing,
+		}, http.StatusBadRequest
+	}
+
+	validForms := []string{"tbl.", "kapsule", "sirup", "kvapky", "masť", "krém", "injekcia", "inhalátor", "čapík"}
+	if !slices.Contains(validForms, prescription.Form) {
+		return gin.H{
+			"status":  http.StatusBadRequest,
+			"message": "Invalid form, must be one of: tbl., kapsule, sirup, kvapky, masť, krém, injekcia, inhalátor, čapík",
+		}, http.StatusBadRequest
+	}
+
+	validStatuses := []string{"active", "dispensed", "expired"}
+	if !slices.Contains(validStatuses, prescription.Status) {
+		return gin.H{
+			"status":  http.StatusBadRequest,
+			"message": "Invalid status, must be one of: active, dispensed, expired",
+		}, http.StatusBadRequest
+	}
+
+	if prescription.Coverage != "" {
+		validCoverages := []string{"full", "partial", "none"}
+		if !slices.Contains(validCoverages, prescription.Coverage) {
+			return gin.H{
+				"status":  http.StatusBadRequest,
+				"message": "Invalid coverage, must be one of: full, partial, none",
+			}, http.StatusBadRequest
+		}
+	}
+
+	if prescription.RepeatMonths != 0 {
+		validRepeats := []int32{1, 3, 6, 12}
+		if !slices.Contains(validRepeats, prescription.RepeatMonths) {
+			return gin.H{
+				"status":  http.StatusBadRequest,
+				"message": "Invalid repeatMonths, must be one of: 1, 3, 6, 12",
+			}, http.StatusBadRequest
+		}
+	}
+
+	return nil, 0
+}
+
 // GET /evidence/{ambulanceId}/patients/{patientId}/prescriptions
 func (o implPatientPrescriptionsAPI) GetPatientPrescriptions(c *gin.Context) {
 	updateAmbulanceFunc(c, func(
@@ -29,6 +91,13 @@ func (o implPatientPrescriptionsAPI) GetPatientPrescriptions(c *gin.Context) {
 		ambulance *Ambulance,
 	) (updatedAmbulance *Ambulance, responseContent interface{}, status int) {
 		patientId := c.Param("patientId")
+
+		if patientId == "" {
+			return nil, gin.H{
+				"status":  http.StatusBadRequest,
+				"message": "patientId path parameter is required",
+			}, http.StatusBadRequest
+		}
 
 		patientIndex := findPatientIndex(ambulance, patientId)
 		if patientIndex < 0 {
@@ -55,6 +124,13 @@ func (o implPatientPrescriptionsAPI) CreatePrescription(c *gin.Context) {
 	) (updatedAmbulance *Ambulance, responseContent interface{}, status int) {
 		patientId := c.Param("patientId")
 
+		if patientId == "" {
+			return nil, gin.H{
+				"status":  http.StatusBadRequest,
+				"message": "patientId path parameter is required",
+			}, http.StatusBadRequest
+		}
+
 		patientIndex := findPatientIndex(ambulance, patientId)
 		if patientIndex < 0 {
 			return nil, gin.H{
@@ -72,11 +148,9 @@ func (o implPatientPrescriptionsAPI) CreatePrescription(c *gin.Context) {
 			}, http.StatusBadRequest
 		}
 
-		if prescription.Id == "" {
-			return nil, gin.H{
-				"status":  http.StatusBadRequest,
-				"message": "Prescription id is required",
-			}, http.StatusBadRequest
+		// Validácia povinných polí a enum hodnôt
+		if errResp, errStatus := validatePrescription(prescription); errResp != nil {
+			return nil, errResp, errStatus
 		}
 
 		// Skontroluj duplicitu - predpis s rovnakým id už existuje
@@ -121,6 +195,19 @@ func (o implPatientPrescriptionsAPI) GetPrescription(c *gin.Context) {
 		patientId := c.Param("patientId")
 		prescriptionId := c.Param("prescriptionId")
 
+		if patientId == "" {
+			return nil, gin.H{
+				"status":  http.StatusBadRequest,
+				"message": "patientId path parameter is required",
+			}, http.StatusBadRequest
+		}
+		if prescriptionId == "" {
+			return nil, gin.H{
+				"status":  http.StatusBadRequest,
+				"message": "prescriptionId path parameter is required",
+			}, http.StatusBadRequest
+		}
+
 		patientIndex := findPatientIndex(ambulance, patientId)
 		if patientIndex < 0 {
 			return nil, gin.H{
@@ -153,6 +240,37 @@ func (o implPatientPrescriptionsAPI) UpdatePrescription(c *gin.Context) {
 		patientId := c.Param("patientId")
 		prescriptionId := c.Param("prescriptionId")
 
+		if patientId == "" {
+			return nil, gin.H{
+				"status":  http.StatusBadRequest,
+				"message": "patientId path parameter is required",
+			}, http.StatusBadRequest
+		}
+		if prescriptionId == "" {
+			return nil, gin.H{
+				"status":  http.StatusBadRequest,
+				"message": "prescriptionId path parameter is required",
+			}, http.StatusBadRequest
+		}
+
+		var prescription Prescription
+		if err := c.ShouldBindJSON(&prescription); err != nil {
+			return nil, gin.H{
+				"status":  http.StatusBadRequest,
+				"message": "Invalid request body",
+				"error":   err.Error(),
+			}, http.StatusBadRequest
+		}
+
+		// Forsuj id z URL pred validáciou - klient ho v body nemusí mať
+		// alebo ho môže mať s inou hodnotou. Validátor potom skontroluje že je vyplnené.
+		prescription.Id = prescriptionId
+
+		// Validácia povinných polí a enum hodnôt (rovnako ako pri create)
+		if errResp, errStatus := validatePrescription(prescription); errResp != nil {
+			return nil, errResp, errStatus
+		}
+
 		patientIndex := findPatientIndex(ambulance, patientId)
 		if patientIndex < 0 {
 			return nil, gin.H{
@@ -172,18 +290,6 @@ func (o implPatientPrescriptionsAPI) UpdatePrescription(c *gin.Context) {
 			}, http.StatusNotFound
 		}
 
-		var prescription Prescription
-		if err := c.ShouldBindJSON(&prescription); err != nil {
-			return nil, gin.H{
-				"status":  http.StatusBadRequest,
-				"message": "Invalid request body",
-				"error":   err.Error(),
-			}, http.StatusBadRequest
-		}
-
-		// Zachovaj id z URL aby klient nemohol predpis premenovať
-		prescription.Id = prescriptionId
-
 		ambulance.Patients[patientIndex].Prescriptions[rxIndex] = prescription
 
 		return ambulance, ambulance.Patients[patientIndex].Prescriptions[rxIndex], http.StatusOK
@@ -198,6 +304,19 @@ func (o implPatientPrescriptionsAPI) DeletePrescription(c *gin.Context) {
 	) (updatedAmbulance *Ambulance, responseContent interface{}, status int) {
 		patientId := c.Param("patientId")
 		prescriptionId := c.Param("prescriptionId")
+
+		if patientId == "" {
+			return nil, gin.H{
+				"status":  http.StatusBadRequest,
+				"message": "patientId path parameter is required",
+			}, http.StatusBadRequest
+		}
+		if prescriptionId == "" {
+			return nil, gin.H{
+				"status":  http.StatusBadRequest,
+				"message": "prescriptionId path parameter is required",
+			}, http.StatusBadRequest
+		}
 
 		patientIndex := findPatientIndex(ambulance, patientId)
 		if patientIndex < 0 {

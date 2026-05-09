@@ -49,11 +49,17 @@ func (o implAmbulancesAPI) CreateAmbulance(c *gin.Context) {
 		return
 	}
 
-	// 3. Validácia povinných polí
-	if ambulance.Id == "" {
+	// 3. Validácia povinných polí podľa OpenAPI spec
+	missing := validateRequired(map[string]string{
+		"id":         ambulance.Id,
+		"name":       ambulance.Name,
+		"roomNumber": ambulance.RoomNumber,
+	})
+	if len(missing) > 0 {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"status":  "Bad Request",
-			"message": "Ambulance id is required",
+			"message": "Missing required fields",
+			"missing": missing,
 		})
 		return
 	}
@@ -110,7 +116,16 @@ func (o implAmbulancesAPI) DeleteAmbulance(c *gin.Context) {
 	// 2. Získaj ID ambulancie z URL parametra
 	ambulanceId := c.Param("ambulanceId")
 
-	// 3. Zmaž dokument z MongoDB
+	// 3. Validácia URL parametra
+	if ambulanceId == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status":  "Bad Request",
+			"message": "ambulanceId path parameter is required",
+		})
+		return
+	}
+
+	// 4. Zmaž dokument z MongoDB
 	err := db.DeleteDocument(c, ambulanceId)
 
 	switch err {
